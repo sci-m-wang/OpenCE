@@ -78,6 +78,7 @@ class OfflineAdapterTest(unittest.TestCase):
             reflector=reflector,
             curator=curator,
             max_refinement_rounds=1,
+            deduplicator=None,
         )
 
         sample = Sample(

@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Sequence
 
+from .deduplication import Deduplicator
 from .playbook import Playbook
 from .roles import Curator, CuratorOutput, Generator, GeneratorOutput, Reflector, ReflectorOutput
 
@@ -148,6 +149,27 @@ class AdapterBase:
 class OfflineAdapter(AdapterBase):
     """Runs multi-epoch offline adaptation on a training split."""
 
+    def __init__(
+        self,
+        *,
+        playbook: Optional[Playbook] = None,
+        generator: Generator,
+        reflector: Reflector,
+        curator: Curator,
+        deduplicator: Optional[Deduplicator] = None,
+        max_refinement_rounds: int = 1,
+        reflection_window: int = 3,
+    ) -> None:
+        super().__init__(
+            playbook=playbook,
+            generator=generator,
+            reflector=reflector,
+            curator=curator,
+            max_refinement_rounds=max_refinement_rounds,
+            reflection_window=reflection_window,
+        )
+        self.deduplicator = deduplicator
+
     def run(
         self,
         samples: Sequence[Sample],
@@ -157,6 +179,7 @@ class OfflineAdapter(AdapterBase):
         results: List[AdapterStepResult] = []
         total_steps = len(samples)
         for epoch_idx in range(1, epochs + 1):
+            bullet_ids_this_epoch = []
             for step_idx, sample in enumerate(samples, start=1):
                 result = self._process_sample(
                     sample,
@@ -167,6 +190,13 @@ class OfflineAdapter(AdapterBase):
                     total_steps=total_steps,
                 )
                 results.append(result)
+                bullet_ids_this_epoch.extend(
+                    op.bullet_id for op in result.curator_output.delta.operations if op.bullet_id
+                )
+
+            if self.deduplicator:
+                self.playbook.deduplicate(self.deduplicator, bullet_ids_this_epoch)
+
         return results
 
 

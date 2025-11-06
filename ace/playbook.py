@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Dict, Iterable, List, Optional
 
 from .delta import DeltaBatch, DeltaOperation
+from .deduplication import Deduplicator
 
 
 @dataclass
@@ -178,6 +179,35 @@ class Playbook:
             if operation.bullet_id is None:
                 return
             self.remove_bullet(operation.bullet_id)
+
+    def deduplicate(self, deduplicator: Deduplicator, bullet_ids: List[str]) -> List[str]:
+        """
+        Finds and removes duplicate bullets from the playbook.
+
+        Args:
+            deduplicator: The Deduplicator instance.
+            bullet_ids: A list of bullet IDs to check for duplicates.
+
+        Returns:
+            A list of bullet IDs that were removed.
+        """
+        new_bullets = {
+            bullet_id: self._bullets[bullet_id].content
+            for bullet_id in bullet_ids
+            if bullet_id in self._bullets
+        }
+        existing_bullets = {
+            bullet_id: bullet.content
+            for bullet_id, bullet in self._bullets.items()
+            if bullet_id not in new_bullets
+        }
+
+        duplicate_ids = deduplicator.find_duplicates(new_bullets, existing_bullets)
+
+        for bullet_id in duplicate_ids:
+            self.remove_bullet(bullet_id)
+
+        return duplicate_ids
 
     # ------------------------------------------------------------------ #
     # Presentation helpers
