@@ -1,6 +1,6 @@
 # OpenCE: The Open Context Engineering Toolkit
 
-[English](https://github.com/sci-m-wang/OpenCE/README.md) | [中文](https://github.com/sci-m-wang/OpenCE/README_ZH.md)
+[English](https://github.com/sci-m-wang/OpenCE/blob/main/README.md) | [中文](https://github.com/sci-m-wang/OpenCE/blob/main/README_ZH.md)
 
 ### 🚀 Project Evolution: From `ACE-open` to `OpenCE`
 
@@ -64,7 +64,7 @@ The code follows the paper’s design:
   * Three agentic roles (Generator, Reflector, Curator) interact through incremental delta updates.
   * Offline and online adaptation loops support multi-epoch training and test-time continual learning.
 
-Refer to [docs/method\_outline.md](https://github.com/sci-m-wang/OpenCE/docs/method_outline.md) for a distilled summary of the methodology extracted from the paper.
+Refer to [docs/method\_outline.md](https://github.com/sci-m-wang/OpenCE/blob/main/docs/method_outline.md) for a distilled summary of the methodology extracted from the paper.
 
 ### Repository Layout
 
