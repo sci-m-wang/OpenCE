@@ -1,139 +1,136 @@
-# OpenCE: 开放上下文工程工具箱
+# OpenCE：闭环上下文工程工具箱
 
-[English](https://github.com/sci-m-wang/OpenCE/blob/main/README.md) | [中文](https://github.com/sci-m-wang/OpenCE/blob/main/README_ZH.md)
+OpenCE 是一个可插拔的**闭环上下文工程 (Closed-Loop CE)** 元框架，将社区版 ACE 复现升级为能够“感知 → 构建 → 评估 → 进化”的自我进化系统。
 
-### 🚀 项目演进：从 `ACE-open` 到 `OpenCE`
+## 为什么选择闭环？
 
-您好！感谢您的关注。本项目正在经历一次激动人心的演进。
+传统 RAG 是开环流程——获取一次上下文就立即回答。OpenCE 在末端新增两步：
 
-本仓库最初是 **`ACE-open`**，一个社区驱动的 **Agentic Context Engineering (ACE)** 论文 (arXiv:2510.04618) 的复现项目，因为原论文并未开源。得益于社区的鼎力支持，本项目迅速获得了 **300+** 颗星！(非常感谢\! 🙏)
+1. **运行时评估**：每次 LLM 回复都会被自动评估（例如 ACE Reflector、RAGAS）。
+2. **策略进化**：评估信号会驱动策略或记忆库的更新（例如 ACE Curator 更新 Playbook）。
 
-海量的 Issues、讨论和 Fork 使命题变得清晰：社区需要的不仅仅是一个论文复现，而是一个更健壮、更标准、可扩展的\*\*“上下文工程 (Context Engineering)” 工具箱\*\*。
+这样形成一个不断自我强化的“闭环飞轮”。
 
-因此，本项目决定正式升级。我们在此发起 **OpenCE**：一个全新的、社区驱动的开源项目，致力于构建上下文工程领域的“瑞士军刀”，而最初的 ACE 复现将作为它的第一个核心模块。
+## 五大支柱架构
 
-### 🌟 OpenCE 的愿景
+OpenCE 将闭环拆分为五个接口（位于 `src/opence/interfaces/`）：
 
-**OpenCE (Open Context Engineering)** 旨在成为一个模块化、功能强大、易于使用的工具箱，帮助开发者和研究者轻松**实现**、**评估**和**组合**各种前沿的 CE 技术。
+| 支柱 | 接口 | 职责 |
+| --- | --- | --- |
+| 获取 (Acquisition) | `IAcquirer` | 感知层，负责从 DB/文件/Web/LangChain 拉取原始信息。 |
+| 处理 (Processing) | `IProcessor` | 对信息进行清洗、切分、压缩或重排序。 |
+| 构建 (Construction) | `IConstructor` | 将处理后的信息组装成 Prompt/Few-shot 上下文。 |
+| 评估 (Evaluation) | `IEvaluator` | 对 LLM 响应进行质检，产生反馈信号。 |
+| 进化 (Evolution) | `IEvolver` | 消耗评估信号，更新长期策略/记忆库。 |
 
-**我们的核心原则：**
+接口是“灵魂 (Soul)”，原生组件位于 `src/opence/components/`（“电池 (Batteries)”），第三方适配器在 `src/opence/adapters/`（“胶水 (Glue)”），而 `src/opence/core/orchestrator.py` 则是驱动整个闭环的“引擎”。
 
-  * **模块化 (Modular):** 轻松插拔、组合不同的 CE 策略（如 RAG、压缩、Prompting）。
-  * **评估驱动 (Evaluation-Driven):** 提供标准化基准，用数据衡量 CE 策略的真实效果。
-  * **社区所有 (Community-Owned):** 这不是“我”的项目，这是“我们”的项目。
-
-### 🗺️ 路线图 (Roadmap)
-
-  * **[v0.1 - 基础重构]** (进行中)
-      * [ ] 将现有 ACE 代码重构为 OpenCE 的第一个核心模块：`opence.ace`。
-      * [ ] 建立清晰的 `CONTRIBUTING.md` 贡献指南。
-      * [ ] 迁移并解决 `ACE-open` 仓库的遗留 Issues。
-  * **[v0.5 - 核心模块]**
-      * [ ] 添加 `opence.compression` (上下文压缩) 等新模块。
-      * [ ] 引入 `opence.evaluation` (一个基础的 CE 评估框架)。
-  * **[v1.0 - 生态扩展]**
-      * [ ] 与 LangChain / LlamaIndex 等生态的深度集成。
-      * [ ] ... 更多功能，由社区决定！
-
-### 🤝 我们正在寻找你！(Call for Contributions)
-
-一个人走得快，一群人走得远。为了实现 OpenCE 的愿景，我们迫切需要您的帮助。
-
-我们正在寻找：
-
-  * **开发者 (Developers)**: 构建新功能、修复 Bug。
-  * **研究者 (Researchers)**: 帮助我们集成最新的 CE 论文。
-  * **文档贡献者 (Doc Writers)**: 帮助我们撰写清晰易用的文档。
-
-**如何开始贡献？**
-
-1.  阅读我们的 **[CONTRIBUTING.md](link-to-contributing-guide)** (即将推出)。
-2.  寻找 **[Good First Issue](link-to-issues)** (适合新手的任务) 标签。
-
------
-
-## 核心模块：ACE 框架 (我们故事开始的地方)
-
-*(This module is the reproduction that started it all)*
-
-本模块是 [Agentic Context Engineering (ACE)](https://arxiv.org/abs/2510.04618) 论文方法的实现框架。
-
-代码设计遵循原论文：
-
-  * 上下文 (Contexts) 是由“条目 (bullet entries)”构成的结构化手册 (playbooks)，每个条目都有“有益/有害”计数器。
-  * 三种 Agent 角色 (Generator, Reflector, Curator) 通过增量“Deltas 更新”进行交互。
-  * 离线 (Offline) 和在线 (Online) 适应循环支持多轮训练和测试时的持续学习。
-
-关于该方法的精炼总结，请参阅 [docs/method\_outline.md](https://github.com/sci-m-wang/OpenCE/blob/main/docs/method_outline.md)。
-
-### 项目结构
+## 代码结构
 
 ```
-ace/         # v0.1 将重命名为 opence/ace: 核心库模块
-tests/       # 轻量级回归测试
-docs/        # 关于论文方法的技术笔记
-scripts/     # (新增) 示例运行脚本
+src/
+└── opence/
+    ├── interfaces/        # 抽象接口 + Pydantic 数据模型
+    ├── components/        # 原生组件：acquirers/processors/constructors/evaluators/evolvers
+    ├── models/            # 模型客户端与 Provider（API、本地 transformers、RWKV）
+    ├── methods/           # 综合方法（如 ACE 闭环）
+    ├── adapters/          # LangChain 等生态的薄封装
+    ├── core/              # LLM Client + ClosedLoopOrchestrator
+    └── ace/               # 原 ACE 复现，现作为 Evolver/Evaluator 子模块
 ```
 
-### 快速开始
+`scripts/` 提供端到端示例，`tests/` 覆盖 orchestrator 与 ACE 封装。
 
-确保您安装了 Python 3.9+ (开发环境使用 3.12)。
+## 使用 `uv`
 
-(可选) 创建并激活虚拟环境。
-
-运行单元测试：
+项目使用 [`uv`](https://github.com/astral-sh/uv) 管理依赖：
 
 ```bash
-python -m unittest discover -s tests
+uv sync             # 安装依赖
+uv run pytest       # 运行测试
+uv run python scripts/run_local_adapter.py  # 运行示例脚本
 ```
 
-### 使用示例
+所有源码位于 `src/`，如需全局安装可直接运行 `uv pip install -e .`。
 
-这是一个使用 `DummyLLMClient` (虚拟 LLM) 的最小离线适应循环：
+## 闭环示例
 
 ```python
-import json
-from ace import (
-    Playbook, DummyLLMClient, Generator, Reflector, Curator,
-    OfflineAdapter, Sample, TaskEnvironment, EnvironmentResult
+from opence.core import ClosedLoopOrchestrator, DummyLLMClient
+from opence.components import (
+    FileSystemAcquirer,
+    FewShotConstructor,
+    SimpleTruncationProcessor,
+    KeywordBoostReranker,
+    ACEReflectorEvaluator,
+    ACECuratorEvolver,
+)
+from opence.methods.ace import Playbook, Reflector, Curator
+from opence.interfaces import LLMRequest
+
+playbook = Playbook()
+reflector = Reflector(DummyLLMClient())
+curator = Curator(DummyLLMClient())
+
+orchestrator = ClosedLoopOrchestrator(
+    llm=DummyLLMClient(),
+    acquirer=FileSystemAcquirer("docs"),
+    processors=[KeywordBoostReranker(["安全", "火灾"]), SimpleTruncationProcessor()],
+    constructor=FewShotConstructor(),
+    evaluator=ACEReflectorEvaluator(reflector, playbook),
+    evolver=ACECuratorEvolver(curator, playbook),
 )
 
-# 定义一个玩具任务环境
-class ToyEnv(TaskEnvironment):
-    def evaluate(self, sample, generator_output):
-        gt = sample.ground_truth or ""
-        pred = generator_output.final_answer
-        feedback = "correct" if pred == gt else f"expected {gt} but got {pred}"
-        return EnvironmentResult(feedback=feedback, ground_truth=gt)
-
-client = DummyLLMClient()
-
-# 为3个 Agent 角色预设好返回的 JSON 响应
-client.queue(json.dumps({"reasoning": "...", "bullet_ids": [], "final_answer": "42"}))
-client.queue(json.dumps({"reasoning": "...", "error_identification": "", "root_cause_analysis": "",
-                         "correct_approach": "", "key_insight": "Remember 42.", "bullet_tags": []}))
-client.queue(json.dumps({"reasoning": "...", "operations": [{"type": "ADD", "section": "defaults",
-                         "content": "Answer 42 when in doubt.", "metadata": {"helpful": 1}}]}))
-
-adapter = OfflineAdapter(
-    playbook=Playbook(),
-    generator=Generator(client),
-    reflector=Reflector(client),
-    curator=Curator(client),
-)
-samples = [Sample(question="Life?", ground_truth="42")]
-
-adapter.run(samples, ToyEnv(), epochs=1)
+result = orchestrator.run(LLMRequest(question="如何开展工业火灾勘验？"))
+print(result.evaluation.feedback)
+print(playbook.as_prompt())
 ```
 
-### 扩展至完整实验
+任一支柱都可以用你自己的实现或第三方适配器替换，构建不同的 CE 策略组合。
 
-1.  **实现 `LLMClient` 子类**：包装您选择的模型 API (例如 OpenAI, DeepSeek)。
-2.  **提供任务特定的 Prompts**：参见 `ace/prompts.py`，或根据您的领域进行定制。
-3.  **构建 `TaskEnvironment` 适配器**：运行您的基准测试工作流 (例如 AppWorld ReAct agent, FiNER/Formula 评估)。
-4.  **配置循环**：使用 `OfflineAdapter.run` 和 `OnlineAdapter.run`，并按原论文所述配置多轮 (epochs)。
-5.  **换用真实 LLM**：例如，使用本地模型权重并指定 GPU：
-    ```bash
-    CUDA_VISIBLE_DEVICES=2,3 python scripts/run_local_adapter.py
-    ```
-    (请参阅 `scripts/` 中的最小配置示例。)
+## 方法层（Methods）
+
+`opence.methods` 提供“综合方法”定义，用于一次性装配多个组件。首个实现 `ACEClosedLoopMethod` 将 ACE 的 Reflector（评估）与 Curator（进化）封装为可直接调用的闭环方案：
+
+```python
+from opence import DummyLLMClient
+from opence.methods import ACEClosedLoopMethod
+
+method = ACEClosedLoopMethod(
+    generator_llm=DummyLLMClient(),
+    reflector_llm=DummyLLMClient(),
+    curator_llm=DummyLLMClient(),
+)
+loop = method.build().orchestrator
+```
+
+通过 `MethodRegistry` 可以注册/发现自定义方法，让 CLI 或服务层按名称启用。
+
+## 模型层（Models）
+
+`opence.models` 增加了 Provider 抽象，统一 API 模型（`OpenAIModelProvider`）、本地 transformers（`TransformersModelProvider`）、RWKV 权重（`RWKVModelProvider`）以及测试用的 `DummyModelProvider`。`ClosedLoopOrchestrator` 支持直接接收 Provider 或已有的 `LLMClient`，从而在不同模型后端之间保持一致的调用体验。
+
+## ACE 模块
+
+原始 ACE 复现现位于 `opence.methods.ace`，依旧提供：
+
+- `OfflineAdapter` / `OnlineAdapter`
+- `Playbook`、`Generator`、`Reflector`、`Curator`、语义去重
+- 更新后的脚本 `scripts/run_local_adapter.py`、`scripts/run_questions.py`
+
+示例运行方式：
+
+```bash
+uv run python scripts/run_local_adapter.py --model-path /path/to/model
+```
+
+`ACEReflectorEvaluator` + `ACECuratorEvolver` 已经把这些角色桥接到新的闭环 orchestrator 中，让 ACE 成为 toolkit 的首个 Evolver/Evaluator 实现。
+
+## 路线图
+
+- **v0.1**：完成闭环骨架（当前版本），发布 ACE 适配组件。
+- **v0.3**：引入更多电池（压缩、动态 few-shot、打分适配器、`opence.contrib` 注册表）。
+- **v0.5**：提供配置化的 pipeline + 基准套件，强化 LangChain/LlamaIndex 适配。
+- **v1.0**：形成社区标准，深入对接更广泛的开放生态。
+
+欢迎开发者、研究者和文档贡献者加入，共同打造下一代上下文工程体系！

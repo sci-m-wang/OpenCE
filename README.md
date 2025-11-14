@@ -1,138 +1,149 @@
-# OpenCE: The Open Context Engineering Toolkit
+# OpenCE: Closed-Loop Context Engineering Toolkit
 
-[English](https://github.com/sci-m-wang/OpenCE/blob/main/README.md) | [中文](https://github.com/sci-m-wang/OpenCE/blob/main/README_ZH.md)
+OpenCE is a **pluggable meta-framework** for building closed-loop Context Engineering (CE) systems. It evolves the original community ACE reproduction into a toolkit that can *sense → reason → evaluate → evolve* its own strategies.
 
-### 🚀 Project Evolution: From `ACE-open` to `OpenCE`
+## Why Closed-Loop CE?
 
-Welcome\! This project is undergoing an exciting evolution.
+Classical RAG stacks are open loops: they fetch context once and immediately respond. OpenCE adds two missing pillars:
 
-This repository began as **`ACE-open`**, a community-driven reproduction of the **Agentic Context Engineering (ACE)** paper (arXiv:2510.04618), which had not released its official code. Thanks to the community's incredible support, it quickly gained **300+ stars**\! (Thank you\! 🙏)
+1. **Evaluation** – automatically score every LLM response using domain-specific evaluators (ACE Reflector, RAGAS, etc.).
+2. **Evolution** – feed those evaluation signals into long-term memory/strategy modules (ACE Curator, adaptive RAG policies, …).
 
-The numerous Issues, discussions, and forks made one thing clear: the community doesn't just need a single reproduction. We need a robust, standardized, and extensible **Toolkit for Context Engineering** (CE).
+This creates a self-improving flywheel where every new interaction strengthens future contexts.
 
-Therefore, this project is officially evolving. We are launching **OpenCE**: a new, community-driven project to build the definitive open-source toolkit for Context Engineering, with the original ACE reproduction as its first core module.
+## The Five Pillars Architecture
 
-### 🌟 The OpenCE Vision
+OpenCE standardizes five interfaces so that any CE system can be composed as Lego bricks:
 
-**OpenCE (Open Context Engineering)** aims to be a modular, powerful, and easy-to-use toolkit to help developers and researchers implement, evaluate, and combine cutting-edge CE techniques.
+| Pillar | Interface | Responsibility |
+| --- | --- | --- |
+| Acquisition | `IAcquirer` | Perception layer (databases, web, LangChain retrievers). |
+| Processing | `IProcessor` | Cleans, deduplicates, compresses, or reranks acquired knowledge. |
+| Construction | `IConstructor` | Builds the final prompt/context bundle (few-shot selection, dynamic instructions). |
+| Evaluation | `IEvaluator` | Scores LLM responses; outputs rich feedback signals. |
+| Evolution | `IEvolver` | Consumes evaluation signals to update long-term strategies (playbooks, memories, knobs). |
 
-**Our Core Principles:**
+Each pillar is defined in `src/opence/interfaces/` (the **soul**), implemented natively in `src/opence/components/` (the **batteries**), and can be connected to external ecosystems through `src/opence/adapters/` (the **glue**).
 
-  * **Modular:** Easily swap and combine different CE strategies (RAG, Compression, Prompting).
-  * **Evaluation-Driven:** Provide standardized benchmarks to measure which CE strategies *actually* work.
-  * **Community-Owned:** This is not "my" project; it's "our" project.
-
-### 🗺️ Roadmap
-
-  * **[v0.1 - Refactor]** (In Progress)
-      * [ ] Refactor the existing ACE code into the first core module: `opence.ace`.
-      * [ ] Establish a clear `CONTRIBUTING.md` guide.
-      * [ ] Migrate and address key Issues from the original `ACE-open` repo.
-  * **[v0.5 - Core Modules]**
-      * [ ] Add new modules for `opence.compression` (Context Compression).
-      * [ ] Introduce `opence.evaluation` (A basic CE evaluation framework).
-  * **[v1.0 - Ecosystem]**
-      * [ ] Deep integration with LangChain / LlamaIndex.
-      * [ ] ... and more, as decided by the community\!
-
-### 🤝 We Need You\! (Call for Contributions)
-
-One person can go fast, but a community can go far. To make OpenCE a reality, we need your help.
-
-We are looking for:
-
-  * **Developers** (to build new features and fix bugs)
-  * **Researchers** (to help us integrate the latest CE papers)
-  * **Doc Writers** (to make OpenCE easy to use)
-
-**How to Start:**
-
-1.  Check our new **[CONTRIBUTING.md](link-to-contributing-guide)** (coming soon).
-2.  Look for issues tagged **[Good First Issue](link-to-issues)**.
-
------
-
-## Core Module: Agentic Context Engineering (ACE) Framework
-
-*(This is the reproduction that started it all)*
-
-This module is an implementation scaffold for the **Agentic Context Engineering (ACE)** method from [Agentic Context Engineering: Evolving Contexts for Self-Improving Language Models (arXiv:2510.04618)](https://arxiv.org/abs/2510.04618).
-
-The code follows the paper’s design:
-
-  * Contexts are structured playbooks made of bullet entries with helpful/harmful counters.
-  * Three agentic roles (Generator, Reflector, Curator) interact through incremental delta updates.
-  * Offline and online adaptation loops support multi-epoch training and test-time continual learning.
-
-Refer to [docs/method\_outline.md](https://github.com/sci-m-wang/OpenCE/blob/main/docs/method_outline.md) for a distilled summary of the methodology extracted from the paper.
-
-### Repository Layout
+## Repository Layout
 
 ```
-ace/         # Renamed to opence/ace in v0.1: core library modules
-tests/       # Lightweight regression tests
-docs/        # Engineering notes on the paper’s method
-scripts/     # Example run scripts (NEW)
+src/
+└── opence/
+    ├── interfaces/        # Five pillar ABCs + canonical data models
+    ├── components/        # Batteries-included implementations
+    │   ├── acquirers/     # Native file readers, etc.
+    │   ├── processors/    # Compressors, rerankers …
+    │   ├── constructors/  # Few-shot selectors
+    │   ├── evaluators/    # ACE reflector integrator
+    │   └── evolvers/      # ACE curator + playbook evolver
+    ├── models/            # Client abstractions + providers (API, transformers, RWKV)
+    ├── methods/           # Composite closed-loop recipes (ACE closed loop, ...)
+    ├── adapters/          # LangChain/LlamaIndex adapters (thin wrappers)
+    ├── core/              # LLM clients + ClosedLoopOrchestrator
+    └── ace/               # Original ACE reproduction (generator/reflector/curator/playbook)
 ```
 
-### Quick Start
+Scripts in `scripts/` show end-to-end examples, while `tests/` cover the orchestrator, ACE wrappers, and the legacy adapters.
 
-Ensure Python 3.9+ (development used 3.12).
+## Using `uv`
 
-(Optional) Create a virtual environment and activate it.
-
-Run the unit tests:
+This repo is managed with [`uv`](https://github.com/astral-sh/uv). Typical workflow:
 
 ```bash
-python -m unittest discover -s tests
+# Install deps
+uv sync
+
+# Run the test suite
+uv run pytest
+
+# Format/lint (optional if you add ruff/black)
+uv run ruff check
 ```
 
-### Example Usage
+All code lives under `src/`, so editable installs (`uv pip install -e .`) just work if you prefer a global environment.
 
-Here is a minimal offline adaptation loop with the dummy LLM:
+## Minimal Closed-Loop Example
 
 ```python
-import json
-from ace import (
-    Playbook, DummyLLMClient, Generator, Reflector, Curator,
-    OfflineAdapter, Sample, TaskEnvironment, EnvironmentResult
+from opence.core import ClosedLoopOrchestrator, DummyLLMClient
+from opence.components import (
+    FileSystemAcquirer,
+    FewShotConstructor,
+    SimpleTruncationProcessor,
+    KeywordBoostReranker,
+    ACEReflectorEvaluator,
+    ACECuratorEvolver,
+)
+from opence.methods.ace import Playbook, Reflector, Curator
+from opence.interfaces import LLMRequest
+
+playbook = Playbook()
+reflector_llm = DummyLLMClient()
+curator_llm = DummyLLMClient()
+
+# Queue deterministic ACE role outputs (see tests for full mocks)
+# ...
+
+orchestrator = ClosedLoopOrchestrator(
+    llm=DummyLLMClient(),
+    acquirer=FileSystemAcquirer("docs"),
+    processors=[KeywordBoostReranker(["safety", "fire"]), SimpleTruncationProcessor()],
+    constructor=FewShotConstructor(),
+    evaluator=ACEReflectorEvaluator(Reflector(reflector_llm), playbook),
+    evolver=ACECuratorEvolver(Curator(curator_llm), playbook),
 )
 
-class ToyEnv(TaskEnvironment):
-    def evaluate(self, sample, generator_output):
-        gt = sample.ground_truth or ""
-        pred = generator_output.final_answer
-        feedback = "correct" if pred == gt else f"expected {gt} but got {pred}"
-        return EnvironmentResult(feedback=feedback, ground_truth=gt)
-
-client = DummyLLMClient()
-
-# Queue up the expected responses for the 3 agentic roles
-client.queue(json.dumps({"reasoning": "...", "bullet_ids": [], "final_answer": "42"}))
-client.queue(json.dumps({"reasoning": "...", "error_identification": "", "root_cause_analysis": "",
-                         "correct_approach": "", "key_insight": "Remember 42.", "bullet_tags": []}))
-client.queue(json.dumps({"reasoning": "...", "operations": [{"type": "ADD", "section": "defaults",
-                         "content": "Answer 42 when in doubt.", "metadata": {"helpful": 1}}]}))
-
-adapter = OfflineAdapter(
-    playbook=Playbook(),
-    generator=Generator(client),
-    reflector=Reflector(client),
-    curator=Curator(client),
-)
-samples = [Sample(question="Life?", ground_truth="42")]
-
-adapter.run(samples, ToyEnv(), epochs=1)
+result = orchestrator.run(LLMRequest(question="How to investigate industrial fires?"))
+print(result.evaluation.feedback)
+print(playbook.as_prompt())
 ```
 
-### Extending to Full Experiments
+Swap out any pillar with your own implementation (or a third-party adapter) to experiment with different CE strategies.
 
-1.  **Implement an `LLMClient` subclass** that wraps your chosen model API (e.g., OpenAI, DeepSeek).
-2.  **Provide task-specific prompts** (see `ace/prompts.py`) or customize them per domain.
-3.  **Build `TaskEnvironment` adapters** that run the benchmark workflow (e.g., AppWorld ReAct agent, FiNER/Formula evaluation).
-4.  **Configure loops:** Use `OfflineAdapter.run` and `OnlineAdapter.run` with multiple epochs as reported in the paper.
-5.  **Swap in a real LLM:** For example, to use local weights on specific GPUs:
-    ```bash
-    CUDA_VISIBLE_DEVICES=2,3 python scripts/run_local_adapter.py
-    ```
-    (See `scripts/` for a minimal setup.)
+## Methods Layer
+
+Many CE techniques require coordinated component bundles. The `opence.methods` package provides plug-and-play recipes, beginning with `ACEClosedLoopMethod`, which wires the ACE reflector/curator (evaluation + evolution) with any acquirer/processor/constructor you supply. Methods return fully configured `ClosedLoopOrchestrator` instances plus metadata, so higher-level runners or CLIs can let users pick `--method ace.closed_loop` and instantly inherit sensible defaults.
+
+```python
+from opence import DummyLLMClient
+from opence.methods import ACEClosedLoopMethod
+
+method = ACEClosedLoopMethod(
+    generator_llm=DummyLLMClient(),
+    reflector_llm=DummyLLMClient(),
+    curator_llm=DummyLLMClient(),
+)
+orchestrator = method.build().orchestrator
+```
+
+`MethodRegistry` enables registering custom methods so downstream tooling can discover everything available in the toolkit.
+
+## Model Providers
+
+`opence.models` now exposes a provider layer that unifies API-based models (`OpenAIModelProvider`), local transformers (`TransformersModelProvider`), RWKV weights (`RWKVModelProvider`), and deterministic test doubles (`DummyModelProvider`). Each provider yields an `LLMClient`; the `ClosedLoopOrchestrator` automatically accepts either a raw `LLMClient` or a provider instance, keeping execution uniform regardless of backend.
+
+## ACE Method (Legacy + Building Block)
+
+The original ACE reproduction now lives under `opence.methods.ace`. You still get:
+
+- `OfflineAdapter` and `OnlineAdapter` orchestration loops.
+- `Playbook`, `Generator`, `Reflector`, `Curator`, and semantic deduplication utilities.
+- Example scripts (`scripts/run_local_adapter.py`, `scripts/run_questions.py`) updated to import `opence.methods.ace`.
+
+You can continue running the classic ACE training scripts:
+
+```bash
+uv run python scripts/run_local_adapter.py --model-path /path/to/model
+```
+
+The new `ACEReflectorEvaluator` + `ACECuratorEvolver` bridge these components into the generic five-pillar orchestrator, so future CE techniques can co-exist with ACE’s evolution dynamics.
+
+## Roadmap
+
+- **v0.1** – Deliver the closed-loop skeleton (this refactor), document interfaces, publish ACE wrappers ✅
+- **v0.3** – Add more batteries (compression, dynamic few-shot, scoring adapters, `opence.contrib` registry).
+- **v0.5** – Provide benchmark packs + configuration-driven pipelines; ship LangChain/LlamaIndex adapters.
+- **v1.0** – Promote OpenCE to a community standard with deep OSS ecosystem integrations.
+
+Contributions are welcome across research, engineering, evaluations, and docs. Join us in defining the future of Context Engineering! 

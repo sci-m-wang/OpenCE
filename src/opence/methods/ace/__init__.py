@@ -2,7 +2,7 @@
 
 from .playbook import Bullet, Playbook
 from .delta import DeltaOperation, DeltaBatch
-from .llm import LLMClient, DummyLLMClient, TransformersLLMClient
+from opence.models.clients import LLMClient, DummyLLMClient, TransformersLLMClient
 from .roles import (
     Generator,
     Reflector,

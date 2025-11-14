@@ -15,10 +15,12 @@ from statistics import mean
 from typing import Dict, Iterable, List
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+SRC = ROOT / "src"
+for candidate in (SRC, ROOT):
+    if str(candidate) not in sys.path:
+        sys.path.insert(0, str(candidate))
 
-from ace import (  # noqa: E402
+from opence.methods.ace import (  # noqa: E402
     AdapterStepResult,
     Curator,
     EnvironmentResult,

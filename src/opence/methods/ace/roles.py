@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
 from .delta import DeltaBatch
-from .llm import LLMClient
+from opence.models.clients import LLMClient
 from .playbook import Playbook
 from .prompts import CURATOR_PROMPT, GENERATOR_PROMPT, REFLECTOR_PROMPT
 

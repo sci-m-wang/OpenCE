@@ -1,5 +1,5 @@
 import unittest
-from ace.deduplication import Deduplicator
+from opence.methods.ace.deduplication import Deduplicator
 
 class DeduplicationTest(unittest.TestCase):
     def test_find_duplicates(self):

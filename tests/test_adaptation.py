@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from ace import (
+from opence.methods.ace import (
     DummyLLMClient,
     EnvironmentResult,
     OfflineAdapter,

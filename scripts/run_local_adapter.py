@@ -12,10 +12,12 @@ from pathlib import Path
 from typing import List
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+SRC = ROOT / "src"
+for candidate in (SRC, ROOT):
+    if str(candidate) not in sys.path:
+        sys.path.insert(0, str(candidate))
 
-from ace import (
+from opence.methods.ace import (
     Curator,
     EnvironmentResult,
     Generator,

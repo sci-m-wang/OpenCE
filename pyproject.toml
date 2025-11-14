@@ -1,0 +1,48 @@
+[project]
+name = "opence"
+version = "0.1.0"
+description = "Open Context Engineering Toolkit for closed-loop context engineering"
+authors = [{name = "OpenCE Contributors"}]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "python-dotenv>=1.0",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+ace = [
+    "sentence-transformers>=2.7",
+    "scikit-learn>=1.2",
+]
+local-llm = [
+    "transformers>=4.38",
+    "torch>=2.1",
+    "accelerate>=0.25",
+]
+cli = [
+    "typer>=0.12",
+]
+api = [
+    "openai>=1.0",
+]
+rwkv = [
+    "rwkv>=0.8",
+]
+
+dev = [
+    "pytest>=7.0",
+]
+
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.4",
+    "pytest>=7.0",
+]
